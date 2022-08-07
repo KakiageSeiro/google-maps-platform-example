@@ -1,6 +1,20 @@
 <template>
   <div id="app">
     <google-map/>
+    <div v-if="!!this.google && !!this.map">
+      <search-bar
+        :map="map"
+        :google="google"
+        @inputKeyword="placeAutocomplete"
+        @mountedSearchBar="mountedSearchBar"
+      />
+      <result-view
+        :map="map"
+        :google="google"
+        :result="result"
+        @mountedResultView="mountedResultView"
+      />
+    </div>
   </div>
 </template>
 
@@ -8,11 +22,15 @@
 /*global google:true*/
 import axios from "axios";
 import $Scriptjs from "scriptjs";
-import GoogleMap from "./components/MapContents.vue"
+import GoogleMap from "./components/MapContents.vue";
+import SearchBar from './components/SearchBar.vue';
+import ResultView from './components/ResultView.vue';
 
-const API_KEY = "■■■■■■■■■■■■■■■■■■";
+const API_KEY = "■■■■■■■■■■■■";
 
-const API_URL = "https://maps.googleapis.com/maps/api/js?key=" + API_KEY + "&libraries=places";
+const API_URL = "https://maps.googleapis.com/maps/api/js?key=" + 
+  API_KEY + "&libraries=places" + 
+  "&libraries=places";
 
 export default {
   name: 'App',
@@ -43,7 +61,7 @@ export default {
     },
     reverseGeocoding(latlng){
       let _self = this;
-      axios.get("gttps://maps.googleapis.com/maps/api/geocode/json", {
+      axios.get("https://maps.googleapis.com/maps/api/geocode/json", {
         params: {language: "ja", latlang: latlng, key: API_KEY}
       })
       .then(response => {
@@ -53,7 +71,7 @@ export default {
         alert("Error: " + error);
       });
     },
-    placeAutocomlate(keyword){
+    placeAutocomplete(keyword){
       $Scriptjs(API_URL, () => {
         let service = new google.maps.places.AutocompleteService();
         let descriptions = [];
@@ -69,10 +87,24 @@ export default {
         )
         this.result = descriptions;
       });
+    },
+    mountedResultView(){
+      let resultView = this.$el.querySelector("#result-view");
+      this.map.comtroles[this.google.maps.ControlPosition.BOTTOM_CENTER].push(
+      resultView
+      );
+    },
+    mountedSearchBar(){
+      let searchBox = this.$el.querySelector("#search-bar");
+      this.map.comtrols[this.google.maps.ControlPosition.TOP_CENTER].push(
+        searchBox
+      );
     }
   },
   components: {
-    GoogleMap
+    GoogleMap,
+    SearchBar,
+    ResultView
   }
 };
 </script>
